@@ -1,0 +1,2000 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Stronger Than Yesterday: Habit Tracker Buddy</title>
+    <style>
+        :root {
+            --bg1: #0b1020;
+            --bg2: #121a33;
+            --card: rgba(255, 255, 255, .08);
+            --card2: rgba(255, 255, 255, .06);
+            --stroke: rgba(255, 255, 255, .12);
+            --text: rgba(255, 255, 255, .92);
+            --muted: rgba(255, 255, 255, .68);
+            --good: #6ef3c5;
+            --warn: #ffd37a;
+            --bad: #ff7aa5;
+            --accent: #9aa9ff;
+            --accent2: #c7b3ff;
+            --shadow: 0 18px 50px rgba(0, 0, 0, .45);
+            --radius: 18px;
+            --radius2: 14px;
+            --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font);
+            color: var(--text);
+            background:
+                radial-gradient(1200px 900px at 15% 10%, rgba(154, 169, 255, .25), transparent 55%),
+                radial-gradient(1000px 800px at 85% 20%, rgba(199, 179, 255, .18), transparent 55%),
+                radial-gradient(1000px 800px at 65% 90%, rgba(110, 243, 197, .12), transparent 55%),
+                linear-gradient(180deg, var(--bg1), var(--bg2));
+            overflow-x: hidden;
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 18px 120px;
+        }
+
+        header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: .2px;
+            font-weight: 750;
+        }
+
+        .brand p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.4;
+            max-width: 560px;
+        }
+
+        .topbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .pill {
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: 999px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .pill b {
+            font-weight: 800
+        }
+
+        .btn {
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid var(--stroke);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .06));
+            color: var(--text);
+            border-radius: 999px;
+            padding: 10px 12px;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            filter: brightness(1.08)
+        }
+
+        .btn:active {
+            transform: translateY(1px)
+        }
+
+        .btn.danger {
+            border-color: rgba(255, 122, 165, .35)
+        }
+
+        .btn.ghost {
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 920px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .card {
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            background: var(--card);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .card .hd {
+            padding: 14px 14px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .card .hd h2 {
+            margin: 0;
+            font-size: 14px;
+            letter-spacing: .2px;
+            font-weight: 800;
+        }
+
+        .card .hd span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .card .bd {
+            padding: 14px
+        }
+
+        /* Buddy */
+        .buddy {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .buddyStage {
+            border-radius: var(--radius2);
+            background: linear-gradient(180deg, rgba(154, 169, 255, .16), rgba(255, 255, 255, .04));
+            border: 1px solid rgba(255, 255, 255, .10);
+            padding: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .buddyStage::before {
+            content: "";
+            position: absolute;
+            inset: -40px;
+            background:
+                radial-gradient(240px 180px at 30% 25%, rgba(110, 243, 197, .18), transparent 60%),
+                radial-gradient(220px 160px at 80% 30%, rgba(255, 211, 122, .14), transparent 60%),
+                radial-gradient(220px 160px at 55% 85%, rgba(255, 122, 165, .10), transparent 60%);
+            filter: blur(2px);
+            pointer-events: none;
+        }
+
+        .buddyRow {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            position: relative;
+        }
+
+        .pet {
+            width: 92px;
+            height: 92px;
+            border-radius: 26px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .05));
+            display: grid;
+            place-items: center;
+            box-shadow: 0 16px 45px rgba(0, 0, 0, .38);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pet .face {
+            width: 64px;
+            height: 64px;
+            border-radius: 22px;
+            background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .22), transparent 45%),
+                linear-gradient(180deg, rgba(154, 169, 255, .35), rgba(199, 179, 255, .18));
+            border: 1px solid rgba(255, 255, 255, .14);
+            display: grid;
+            place-items: center;
+            transform: translateZ(0);
+            animation: floaty 3.2s ease-in-out infinite;
+        }
+
+        .pet .emoji {
+            font-size: 28px;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .28));
+            transform: translateY(-1px);
+        }
+
+        @keyframes floaty {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-5px)
+            }
+        }
+
+        .pet .accessory {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            font-size: 16px;
+            opacity: .95;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .25));
+        }
+
+        .buddyMeta {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .buddyName {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .buddyName b {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: .2px;
+        }
+
+        .buddyName small {
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .bar {
+            height: 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            background: rgba(0, 0, 0, .20);
+            overflow: hidden;
+        }
+
+        .bar>i {
+            display: block;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--good), var(--accent));
+            border-radius: 999px;
+            transition: width .25s ease;
+        }
+
+        .barLabel {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .toast {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(0, 0, 0, .18);
+            color: rgba(255, 255, 255, .86);
+            font-size: 12px;
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+            animation: pop .35s ease
+        }
+
+        @keyframes pop {
+            from {
+                transform: translateY(4px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        /* Habits list */
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            outline: none;
+            background: rgba(0, 0, 0, .20);
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, .45)
+        }
+
+        select {
+            cursor: pointer
+        }
+
+        .habits {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .habit {
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(0, 0, 0, .16);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .habit .left {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            min-width: 0;
+        }
+
+        .check {
+            width: 22px;
+            height: 22px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, .18);
+            background: rgba(255, 255, 255, .04);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            margin-top: 1px;
+        }
+
+        .check.done {
+            background: rgba(110, 243, 197, .18);
+            border-color: rgba(110, 243, 197, .35);
+        }
+
+        .check svg {
+            opacity: .9
+        }
+
+        .habit .txt {
+            min-width: 0
+        }
+
+        .habit .txt b {
+            display: block;
+            font-size: 13px;
+            font-weight: 850;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+
+        .habit .txt small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .habit .right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .tag {
+            padding: 6px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .06);
+        }
+
+        .iconBtn {
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .iconBtn:hover {
+            filter: brightness(1.1)
+        }
+
+        .iconBtn.danger {
+            border-color: rgba(255, 122, 165, .35)
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        /* Shop */
+        .shop {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 520px) {
+            .shop {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .item {
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(0, 0, 0, .16);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .item .l {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .item .emoji {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .10);
+            font-size: 18px;
+        }
+
+        .item b {
+            font-size: 13px;
+            font-weight: 900
+        }
+
+        .item small {
+            display: block;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .badge {
+            padding: 6px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .06);
+            font-size: 12px;
+            color: rgba(255, 255, 255, .88);
+            white-space: nowrap;
+        }
+
+        .item button {
+            padding: 9px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .06);
+            color: var(--text);
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .item button:hover {
+            filter: brightness(1.1)
+        }
+
+        .item button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        /* Footer hint */
+        .hint {
+            margin-top: 10px;
+            color: rgba(255, 255, 255, .55);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .kbd {
+            padding: 2px 7px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            background: rgba(0, 0, 0, .20);
+            font-weight: 800;
+            font-size: 11px;
+            color: rgba(255, 255, 255, .8);
+        }
+
+        /* Setup modal (starting screen) */
+        .modalOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 18px;
+        }
+
+        .modalOverlay.show {
+            display: flex;
+        }
+
+        .modal {
+            width: min(560px, 100%);
+            border-radius: 22px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            background: rgba(15, 22, 44, .92);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, .55);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            overflow: hidden;
+        }
+
+        .modal .mhd {
+            padding: 16px 16px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, .10);
+        }
+
+        .modal .mhd h3 {
+            margin: 0;
+            font-size: 14px;
+            letter-spacing: .2px;
+            font-weight: 900;
+        }
+
+        .modal .mhd p {
+            margin: 6px 0 0;
+            color: rgba(255, 255, 255, .68);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .modal .mbd {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .petGrid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width:520px) {
+            .petGrid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .petChoice {
+            cursor: pointer;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(0, 0, 0, .18);
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            user-select: none;
+        }
+
+        .petChoice:hover {
+            filter: brightness(1.08);
+        }
+
+        .petChoice.selected {
+            border-color: rgba(110, 243, 197, .45);
+            background: rgba(110, 243, 197, .10);
+        }
+
+        .petChoice .big {
+            font-size: 28px;
+            filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .35));
+        }
+
+        .petChoice small {
+            color: rgba(255, 255, 255, .70);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .modal .row2 {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .modal .row2 input {
+            flex: 1;
+        }
+
+        .modal .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 14px 16px;
+            border-top: 1px solid rgba(255, 255, 255, .10);
+        }
+
+        /* Floating version button */
+        .fabVersion {
+            position: fixed;
+            right: 14px;
+            bottom: 14px;
+            z-index: 9995;
+
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(15, 22, 44, .72);
+            color: rgba(255, 255, 255, .92);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+
+            cursor: pointer;
+            user-select: none;
+            font-weight: 800;
+            font-size: 12px;
+        }
+
+        .fabVersion:hover {
+            filter: brightness(1.08);
+        }
+
+        .fabVersion:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Take a Walk (mini game) -->
+    <div class="modalOverlay" id="walkOverlay" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-label="Take a Walk game">
+            <div class="mhd">
+                <h3>Take a Walk</h3>
+                <p>Press <b>Space</b> (or tap) to jump. Collect coins. Avoid obstacles.</p>
+            </div>
+
+            <div class="mbd" style="gap:10px">
+                <canvas id="walkCanvas" width="520" height="220"
+                    style="width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18)"></canvas>
+
+                <div class="row" style="justify-content:space-between;gap:10px">
+                    <div class="pill" style="box-shadow:none">
+                        🪙 Earned: <b id="walkEarned">0</b>
+                    </div>
+                    <div class="pill" style="box-shadow:none">
+                        🏃 Score: <b id="walkScore">0</b>
+                    </div>
+                </div>
+
+                <div class="hint" style="margin-top:0">
+                    Coins you earn here get added to your total when you close the game.
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn ghost" id="walkRestartBtn">Restart</button>
+                <button class="btn" id="walkCloseBtn">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="wrap">
+        <header>
+            <div class="brand">
+                <h1>Stronger Than Yesterday: Habit Tracker Buddy</h1>
+                <p>Track daily habits,
+                    earn coins,
+                    level up your buddy,
+                    and spend rewards. Everything stays on your device.</p>
+            </div>
+            <div class="topbar">
+                <div class="pill">🔥 <b id="streak">0</b> day streak</div>
+                <div class="pill">🪙 <b id="coins">0</b> coins</div>
+                <div class="pill">⭐ lvl <b id="level">1</b></div>
+
+
+                <button class="btn ghost" id="todayBtn" title="Today">📅 <span id="today"></span></button>
+                <button class="btn" id="changePetBtn" title="Change your buddy">🐾 Change</button>
+                <button class="btn" id="walkBtn" title="Mini game: earn coins">🚶 Take a Walk</button>
+                <button class="btn danger" id="resetBtn" title="Clears everything">Reset</button>
+
+                <a class="btn" href="https://forms.gle/jmrQfJW6gJXCqo3g7" target="_blank" rel="noopener">🐞 Feedback</a>
+
+
+            </div>
+        </header>
+        <div class="grid">
+            <!-- Left: Buddy+Shop -->
+            <section class="card">
+                <div class="hd">
+                    <h2>Your Buddy</h2><span class="muted">Coins+XP from habits</span>
+                </div>
+                <div class="bd buddy">
+                    <div class="buddyStage">
+                        <div class="buddyRow">
+                            <div class="pet" id="pet">
+                                <div class="accessory" id="accessory" title="Accessory"></div>
+                                <div class="face">
+                                    <div class="emoji" id="petEmoji">🫧</div>
+                                </div>
+                            </div>
+                            <div class="buddyMeta">
+                                <div class="buddyName"><b id="buddyName">Sprout</b><small id="buddyMood">calm &
+                                        curious</small></div>
+                                <div class="bar" aria-label="XP progress"><i id="xpBar"></i></div>
+                                <div class="barLabel"><span>XP <span id="xp">0</span>/<span
+                                            id="xpNeed">50</span></span><span class="muted">complete habits to
+                                        level up</span></div>
+                                <div class="toast" id="toast"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card" style="box-shadow:none;background:var(--card2)">
+                        <div class="hd">
+                            <h2>Reward Shop</h2><span class="muted">Spend coins!</span>
+                        </div>
+                        <div class="bd">
+                            <div class="shop" id="shop"></div>
+                            <div class="hint">Tip: set habits that are <span class="kbd">tiny</span>and doable.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Right: Habits -->
+            <section class="card">
+                <div class="hd">
+                    <h2>Today’s Habits</h2><span class="muted" id="doneSummary">0/0 done</span>
+                </div>
+                <div class="bd">
+                    <div class="row" style="gap:10px; margin-bottom:12px;"><input id="habitName" type="text"
+                            placeholder="Add a habit (ex: 10 min walk, drink water, journal 5 min)" /><select
+                            id="difficulty" title="Reward amount">
+                            <option value="easy">easy (+5 coins, +8 XP)</option>
+                            <option value="medium" selected>medium (+8 coins, +12 XP)</option>
+                            <option value="hard">hard (+12 coins, +18 XP)</option>
+                        </select><button class="btn" id="addHabit">Add</button></div>
+                    <div class="habits" id="habits"></div>
+                    <div class="hint">Daily reset happens automatically when the date changes. You can keep
+                        the same habits and just check them off each day. </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- Setup / Starting Screen Modal -->
+    <div class="modalOverlay" id="setupOverlay" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-label="Choose your buddy">
+            <div class="mhd">
+                <h3>Pick your Buddy</h3>
+                <p>Choose a starter animal and a name. You can equip accessories in the shop.</p>
+            </div>
+
+            <div class="mbd">
+                <div class="petGrid" id="petGrid">
+                    <div class="petChoice" data-pet="cat">
+                        <div class="big">🐱</div>
+                        <small>Cat</small>
+                    </div>
+                    <div class="petChoice" data-pet="dog">
+                        <div class="big">🐶</div>
+                        <small>Dog</small>
+                    </div>
+                    <div class="petChoice" data-pet="hamster">
+                        <div class="big">🐹</div>
+                        <small>Hamster</small>
+                    </div>
+                    <div class="petChoice" data-pet="bird">
+                        <div class="big">🐥</div>
+                        <small>Bird</small>
+                    </div>
+                </div>
+
+                <div class="row2">
+                    <input id="buddyNameInput" type="text" placeholder="Buddy name (ex: Sprout)" />
+                    <button class="btn" id="saveSetupBtn">Save</button>
+                </div>
+
+                <div class="hint" style="margin-top:0">
+                    Your choice is saved on this device. Reset clears it.
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn ghost" id="cancelSetupBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="fabVersion" id="versionBtn" title="What’s new?">
+        🧩 <span id="versionLabel"></span>
+    </button>
+
+    <script>
+        /** localStorage — single file demo **/
+
+        const STORAGE_KEY = "habitBuddy_v1";
+        const $ = (id) => document.getElementById(id);
+
+        const APP_VERSION = "0.6.0";
+
+        const CHANGELOG = [
+            {
+                version: "0.6.0",
+                date: "2026-01-31",
+                bullets: [
+                    "Added Take a Walk mini-game (earn coins).",
+                    "Buddy selection screen (cat/dog/hamster/bird).",
+                    "Buddy evolves at levels 3 / 7 / 12.",
+                ]
+            },
+            {
+                version: "0.5.1",
+                date: "2026-01-30",
+                bullets: [
+                    "Improved habit rewards + streak logic.",
+                    "UI polish and bug fixes."
+                ]
+            },
+            {
+                version: "0.5.0",
+                date: "2026-01-28",
+                bullets: [
+                    "Added reward shop with accessories.",
+                    "Leveling system with XP.",
+                    "Daily streak tracking."
+                ]
+            },
+            {
+                version: "0.4.0",
+                date: "2026-01-25",
+                bullets: [
+                    "Initial release: basic habit tracker with coin rewards."
+                ]
+            }
+        ];
+        const DIFF = {
+            easy: {
+                coins: 5, xp: 8, label: "easy"
+            }
+
+            ,
+            medium: {
+                coins: 8, xp: 12, label: "medium"
+            }
+
+            ,
+            hard: {
+                coins: 12, xp: 18, label: "hard"
+            }
+        }
+
+            ;
+
+        const SHOP_ITEMS = [
+            // CAT accessories
+            { id: "acc_cat_bow", name: "Bow", emoji: "🎀", cost: 30, type: "accessory", value: "🎀", desc: "sweet", pets: ["cat"] },
+            { id: "acc_cat_flower", name: "Flower", emoji: "🌸", cost: 25, type: "accessory", value: "🌸", desc: "gentle", pets: ["cat"] },
+
+            // DOG accessories
+            { id: "acc_dog_collar", name: "Collar", emoji: "🧣", cost: 30, type: "accessory", value: "🧣", desc: "cozy collar", pets: ["dog"] },
+            { id: "acc_dog_tag", name: "Tag", emoji: "🏷️", cost: 25, type: "accessory", value: "🏷️", desc: "nametag", pets: ["dog"] },
+
+            // HAMSTER accessories
+            { id: "acc_ham_snack", name: "Snack", emoji: "🥜", cost: 20, type: "accessory", value: "🥜", desc: "tiny treat", pets: ["hamster"] },
+            { id: "acc_ham_hat", name: "Mini Hat", emoji: "🎩", cost: 35, type: "accessory", value: "🎩", desc: "formal", pets: ["hamster"] },
+
+            // BIRD accessories
+            { id: "acc_bird_feather", name: "Feather", emoji: "🪶", cost: 25, type: "accessory", value: "🪶", desc: "fancy plumage", pets: ["bird"] },
+            { id: "acc_bird_music", name: "Music", emoji: "🎵", cost: 20, type: "accessory", value: "🎵", desc: "songbird mode", pets: ["bird"] },
+
+            // UNIVERSAL accessories (available to all)
+            { id: "acc_star", name: "Star Charm", emoji: "⭐️", cost: 40, type: "accessory", value: "⭐️", desc: "sparkly", pets: ["cat", "dog", "hamster", "bird"] },
+            { id: "acc_heart", name: "Heart", emoji: "💗", cost: 30, type: "accessory", value: "💗", desc: "support", pets: ["cat", "dog", "hamster", "bird"] },
+        ];
+
+
+        const PETS = {
+            cat: { emoji: "🐱", label: "Cat" },
+            dog: { emoji: "🐶", label: "Dog" },
+            hamster: { emoji: "🐹", label: "Hamster" },
+            bird: { emoji: "🐥", label: "Bird" },
+        };
+        let pendingPetType = null;
+
+        // Pet evolution (levels 3 / 7 / 12)
+        const PET_EVOLUTIONS = {
+            cat: ["🐱", "🦁", "🐯"],     // baby, teen, evolved, legendary
+            dog: ["🐶", "🐕", "🐺"],
+            hamster: ["🐹", "🐹", "🐹"],     // keep cute; hamster has fewer emoji options
+            bird: ["🐥", "🐦", "🦅"],
+        };
+
+        function evolutionStage(level) {
+            // stages: 0=baby, 1=teen, 2=evolved, 3=legendary
+            if (level >= 12) return 3;
+            if (level >= 7) return 2;
+            if (level >= 3) return 1;
+            return 0;
+        }
+
+        function getPetEmoji(petType, level) {
+            const arr = PET_EVOLUTIONS[petType] || ["🫧", "🫧", "🫧", "🫧"];
+            return arr[evolutionStage(level)];
+        }
+
+
+        function todayKey() {
+            // Local date (YYYY-MM-DD)
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${y}-${m}-${day}`;
+        }
+
+        function defaultState() {
+            return {
+                meta: {
+                    createdAt: Date.now(),
+                    lastDate: todayKey(),
+                }
+
+                ,
+                profile: {
+                    buddyName: "Sprout",
+                    petType: null,
+                    petEmoji: "🫧",
+                    accessory: "",
+                    level: 1,
+                    xp: 0,
+                    coins: 0,
+                    streak: 0,
+                    lastCompleteDate: null,
+                },
+
+                // habits list
+                habits: [ // starter set (editable)
+
+                    {
+                        id: cryptoId(), name: "Drink water", diff: "easy", done: false, doneDate: null
+                    }
+
+                    ,
+                    {
+                        id: cryptoId(), name: "Move for 10 minutes", diff: "medium", done: false, doneDate: null
+                    }
+
+                    ,
+                    {
+                        id: cryptoId(), name: "Quick brain-dump journal", diff: "medium", done: false, doneDate: null
+                    }
+
+                    ,
+                ],
+                inventory: {
+                    unlocked: {
+                        "pet_axolotl": true
+                    }
+                }
+            };
+        }
+
+
+        function cryptoId() {
+            // simple unique id
+            return Math.random().toString(16).slice(2) + "-" + Math.random().toString(16).slice(2);
+        }
+
+        function load() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return defaultState();
+
+            try {
+                const state = JSON.parse(raw);
+                // basic validation
+                if (!state.profile || !Array.isArray(state.habits)) return defaultState();
+                return state;
+            }
+
+            catch {
+                return defaultState();
+            }
+        }
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function showToast(msg) {
+            const t = $("toast");
+            t.textContent = msg;
+            t.classList.remove("show");
+            void t.offsetWidth;
+            t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 2300);
+        }
+
+        function xpNeeded(level) {
+            // gentle curve
+            return 40 + (level - 1) * 10;
+        }
+
+        function maybeDailyReset() {
+            const tk = todayKey();
+            if (state.meta.lastDate === tk) return;
+
+            // new day: reset done flags (keep habits)
+            state.habits.forEach(h => {
+                h.done = false;
+                h.doneDate = null;
+            });
+
+            state.meta.lastDate = tk;
+            save();
+        }
+
+        function countDone() {
+            const done = state.habits.filter(h => h.done).length;
+
+            return {
+                done,
+                total: state.habits.length
+            }
+
+                ;
+        }
+
+        function updateStreakIfCompletedAll() {
+            const tk = todayKey();
+
+            const {
+                done,
+                total
+            }
+
+                = countDone();
+            if (total === 0) return;
+
+            // If all done today, update streak only once per day
+            if (done === total) {
+                if (state.profile.lastCompleteDate === tk) return; // already counted today
+
+                const prev = state.profile.lastCompleteDate;
+                state.profile.lastCompleteDate = tk;
+
+                if (!prev) {
+                    state.profile.streak = 1;
+                }
+
+                else {
+                    // compare dates as days difference
+                    const diffDays = dayDiff(prev, tk);
+                    if (diffDays === 1) state.profile.streak += 1;
+                    else state.profile.streak = 1;
+                }
+
+                showToast(`🔥 Streak updated: ${state.profile.streak
+                    }
+
+            day${state.profile.streak === 1 ? "" : "s"
+                    }
+
+            !`);
+            }
+        }
+
+        function dayDiff(isoA, isoB) {
+            const a = new Date(isoA + "T00:00:00");
+            const b = new Date(isoB + "T00:00:00");
+            return Math.round((b - a) / (1000 * 60 * 60 * 24));
+        }
+
+        function addCoinsXp(diffKey) {
+            const r = DIFF[diffKey] || DIFF.medium;
+            state.profile.coins += r.coins;
+            state.profile.xp += r.xp;
+
+            // level up loop
+            let leveled = false;
+
+            while (state.profile.xp >= xpNeeded(state.profile.level)) {
+                state.profile.xp -= xpNeeded(state.profile.level);
+                state.profile.level += 1;
+                leveled = true;
+            }
+
+            if (leveled) {
+                showToast(`⭐ Level up ! You’re lvl ${state.profile.level
+                    }
+
+            .`);
+            }
+
+            else {
+                showToast(`+${r.coins
+                    }
+
+            coins, +${r.xp
+                    }
+
+            XP ✨`);
+            }
+        }
+
+        function toggleHabit(id) {
+            const h = state.habits.find(x => x.id === id);
+            if (!h) return;
+
+            if (h.done) {
+                // uncheck: remove rewards only if it was checked today
+                h.done = false;
+                h.doneDate = null;
+                // (simple approach: do not subtract rewards to avoid math disputes)
+                showToast("Unchecked — no worries.");
+            }
+
+            else {
+                h.done = true;
+                h.doneDate = todayKey();
+                addCoinsXp(h.diff);
+                updateStreakIfCompletedAll();
+            }
+
+            save();
+            render();
+        }
+
+        function deleteHabit(id) {
+            state.habits = state.habits.filter(h => h.id !== id);
+            save();
+            render();
+        }
+
+        function addHabitFromUI() {
+            const name = $("habitName").value.trim();
+            const diff = $("difficulty").value;
+            if (!name) return showToast("Type a habit first ✍️");
+
+            state.habits.unshift({
+                id: cryptoId(), name, diff, done: false, doneDate: null
+            });
+            $("habitName").value = "";
+            save();
+            render();
+        }
+
+        function canAfford(cost) {
+            return state.profile.coins >= cost;
+        }
+
+        function buyItem(itemId) {
+            const item = SHOP_ITEMS.find(x => x.id === itemId);
+            if (!item) return;
+
+            if (state.inventory.unlocked[itemId]) {
+                // already owned -> equip if cosmetic
+                equipItem(item);
+                return;
+            }
+
+            if (!canAfford(item.cost)) {
+                showToast("Not enough coins yet 🪙");
+                return;
+            }
+
+            state.profile.coins -= item.cost;
+            state.inventory.unlocked[itemId] = true;
+            equipItem(item);
+
+            showToast(`Purchased: ${item.name
+                }
+
+        ✨`);
+            save();
+            render();
+        }
+
+        function equipItem(item) {
+
+            const petType = state.profile.petType || "cat";
+            // If current accessory doesn't belong to this pet, unequip it
+            if (state.profile.accessory) {
+                const accItem = SHOP_ITEMS.find(x => x.type === "accessory" && x.value === state.profile.accessory);
+                if (accItem && accItem.pets && !accItem.pets.includes(state.profile.petType)) {
+                    state.profile.accessory = "";
+                }
+            }
+
+            // Update evolved emoji immediately
+            state.profile.petEmoji = getPetEmoji(state.profile.petType, state.profile.level);
+
+            // If item is pet-restricted and doesn't match, block equip
+            if (item.pets && !item.pets.includes(petType)) {
+                showToast("That accessory doesn’t fit your buddy 🐾");
+                return;
+            }
+
+            if (item.type === "accessory") {
+                state.profile.accessory = item.value;
+            } else if (item.type === "petEmoji") {
+                state.profile.petEmoji = item.value;
+            }
+
+
+            if (item.type === "accessory") {
+                state.profile.accessory = item.value;
+            }
+
+            else if (item.type === "petEmoji") {
+                state.profile.petEmoji = item.value;
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            $("versionLabel") && ($("versionLabel").textContent = `v${APP_VERSION}`);
+            $("versionBtn")?.addEventListener("click", openChangelog);
+            $("changelogCloseBtn")?.addEventListener("click", closeChangelog);
+        });
+
+
+        function renderHabits() {
+            const root = document.getElementById("habits");
+            root.innerHTML = "";
+
+            if (state.habits.length === 0) {
+                root.innerHTML = `<div class="habit"><div class="txt"><b>No habits yet</b><small class="muted">Add one above to start earning coins.</small></div></div>`;
+                return;
+            }
+
+            state.habits.forEach(h => {
+                const r = DIFF[h.diff] || DIFF.medium;
+                const el = document.createElement("div");
+                el.className = "habit";
+
+                el.innerHTML = ` <div class="left" > <div class="check ${h.done ? " done" : " "}" title="Mark complete" > ${h.done ? checkSvg(true) : checkSvg(false)
+                    }
+
+            </div> 
+            <div class="txt" > <b>${escapeHtml(h.name)
+                    }
+
+            </b> <small>${r.label
+                    }
+
+            • +${r.coins
+                    }
+
+            🪙 +${r.xp
+                    }
+
+            XP</small> </div> </div> <div class="right" > <span class="tag" >${h.done ? "done" : "today"
+                    }
+
+            </span> <button class="iconBtn danger" title="Delete habit" >✕</button> </div> `;
+
+                el.querySelector(".check").addEventListener("click", () => toggleHabit(h.id));
+                el.querySelector("button").addEventListener("click", () => deleteHabit(h.id));
+                document.querySelectorAll("#versionBtn").length
+
+                root.appendChild(el);
+            });
+        }
+
+        function renderShop() {
+            const root = document.getElementById("shop");
+            root.innerHTML = "";
+            const petType = state.profile.petType || "cat";
+
+
+            SHOP_ITEMS
+                .filter(item => !item.pets || item.pets.includes(petType))
+                .forEach(item => {
+
+                    const owned = ! !state.inventory.unlocked[item.id];
+                    const equipped = (item.type === "accessory" && state.profile.accessory === item.value) || (item.type === "petEmoji" && state.profile.petEmoji === item.value);
+
+                    const el = document.createElement("div");
+                    el.className = "item";
+
+                    el.innerHTML = ` <div class="l" > <div class="emoji" >${item.emoji
+                        }
+
+            </div> <div style="min-width:0" > <b>${item.name
+                        }
+
+            </b> <small>${item.desc
+                        }
+
+            </small> </div> </div> <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end" > <span class="badge" >${owned ? (equipped ? "equipped" : "owned") : (item.cost + " 🪙")
+                        }
+
+            </span> <button ${(!owned && !canAfford(item.cost)) ? "disabled" : ""
+                        }
+
+            > ${owned ? (equipped ? "Equipped" : "Equip") : "Buy"
+                        }
+
+            </button> </div> `;
+                    el.querySelector("button").addEventListener("click", () => buyItem(item.id));
+                    root.appendChild(el);
+                });
+        }
+
+        function renderBuddy() {
+            $("coins").textContent = state.profile.coins;
+            $("level").textContent = state.profile.level;
+            $("xp").textContent = state.profile.xp;
+            $("xpNeed").textContent = xpNeeded(state.profile.level);
+            $("streak").textContent = state.profile.streak;
+            $("buddyName").textContent = state.profile.buddyName;
+
+            // Auto-evolve pet appearance based on level
+            const type = state.profile.petType || "cat";
+            const evolvedEmoji = getPetEmoji(type, state.profile.level);
+            state.profile.petEmoji = evolvedEmoji; // keep saved state consistent
+            $("petEmoji").textContent = evolvedEmoji;
+
+            $("accessory").textContent = state.profile.accessory || "";
+
+            // Mood based on streak/level
+            const stageName = ["baby", "teen", "evolved", "legendary"][evolutionStage(state.profile.level)];
+            // Example mood tweak
+            let mood = `a ${stageName} ${type} buddy`;
+            if (state.profile.streak >= 3) mood = `steady ${stageName} energy`;
+            $("buddyMood").textContent = mood;
+
+            const pct = Math.floor((state.profile.xp / xpNeeded(state.profile.level)) * 100);
+
+            $("xpBar").style.width = `${Math.min(100, Math.max(0, pct))
+                }
+
+    %`;
+        }
+
+        function renderHeaderDate() {
+            const d = new Date();
+
+            const nice = d.toLocaleDateString(undefined, {
+                weekday: "short", month: "short", day: "numeric"
+            });
+            $("today").textContent = nice;
+        }
+
+        function renderDoneSummary() {
+            const {
+                done,
+                total
+            }
+
+                = countDone();
+
+            $("doneSummary").textContent = `${done
+                }
+
+    /${total
+                }
+
+    done`;
+        }
+
+        function render() {
+            renderHeaderDate();
+            renderBuddy();
+            renderHabits();
+            renderShop();
+            renderDoneSummary();
+        }
+
+        /* Helpers */
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, s => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            }
+
+            [s]));
+        }
+
+        function checkSvg(done) {
+            return done ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="rgba(255,255,255,.92)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" > <path d="M7 12h10" stroke="rgba(255,255,255,.60)" stroke-width="2.2" stroke-linecap="round" /> </svg>`;
+        }
+
+        function openChangelog() {
+            const overlay = $("changelogOverlay");
+            if (!overlay) return;
+
+            $("versionLabel").textContent = `v${APP_VERSION}`;
+
+            const latest = CHANGELOG[0];
+            $("changelogSub").textContent = latest
+                ? `Current version: v${APP_VERSION} • Latest: v${latest.version} (${latest.date})`
+                : `Current version: v${APP_VERSION}`;
+
+            const root = $("changelogBody");
+            root.innerHTML = "";
+
+            CHANGELOG.forEach(entry => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.style.boxShadow = "none";
+                card.style.background = "rgba(0,0,0,.12)";
+                card.style.borderRadius = "16px";
+
+                card.innerHTML = `
+            <div class="hd" style="border-bottom:1px solid rgba(255,255,255,.08)">
+                <h2>v${entry.version}</h2>
+                <span class="muted">${entry.date}</span>
+            </div>
+            <div class="bd" style="padding:12px 14px">
+                <ul style="margin:0; padding-left:18px; color:rgba(255,255,255,.86); font-size:13px; line-height:1.5;">
+                ${entry.bullets.map(b => `<li>${escapeHtml(b)}</li>`).join("")}
+                </ul>
+            </div>
+            `;
+                root.appendChild(card);
+            });
+
+            overlay.classList.add("show");
+            overlay.setAttribute("aria-hidden", "false");
+
+            localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION);
+
+        }
+
+        function closeChangelog() {
+            const overlay = $("changelogOverlay");
+            if (!overlay) return;
+            overlay.classList.remove("show");
+            overlay.setAttribute("aria-hidden", "true");
+        }
+
+        /* Init */
+        let state = load();
+        maybeDailyReset();
+        wireSetupUI();
+        ensureSetup();
+        save();
+        render();
+        const seen = localStorage.getItem(SEEN_VERSION_KEY);
+        if (seen !== APP_VERSION && $("versionBtn")) {
+            $("versionBtn").innerHTML = `🧩 <span id="versionLabel">v${APP_VERSION}</span> <span class="badge" style="margin-left:6px">NEW</span>`;
+        }
+
+
+        /* Events */
+        $("addHabit").addEventListener("click", addHabitFromUI);
+
+        $("habitName").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") addHabitFromUI();
+        });
+
+        $("versionLabel") && ($("versionLabel").textContent = `v${APP_VERSION}`);
+        $("versionBtn")?.addEventListener("click", openChangelog);
+        $("changelogCloseBtn")?.addEventListener("click", closeChangelog);
+
+        $("resetBtn").addEventListener("click", () => {
+            if (confirm("Reset everything? This clears habits, coins, XP, and shop items.")) {
+                state = defaultState();
+                save();
+                render();
+                showToast("Reset complete.");
+            }
+        });
+
+        // In case the tab stays open across midnight:
+        setInterval(() => {
+            const before = state.meta.lastDate;
+            maybeDailyReset();
+            if (state.meta.lastDate !== before) render();
+        }
+
+            , 30_000);
+
+        function openSetup(force = false) {
+            const overlay = $("setupOverlay");
+            if (!overlay) return;
+
+            // If already set and not forcing, don’t open
+            if (!force && state.profile.petType) return;
+
+            pendingPetType = state.profile.petType || "cat";
+            $("buddyNameInput").value = state.profile.buddyName || "Sprout";
+
+            // Visual selection
+            document.querySelectorAll("#petGrid .petChoice").forEach(el => {
+                el.classList.toggle("selected", el.dataset.pet === pendingPetType);
+            });
+
+            overlay.classList.add("show");
+            overlay.setAttribute("aria-hidden", "false");
+        }
+
+        function closeSetup() {
+            const overlay = $("setupOverlay");
+            if (!overlay) return;
+            overlay.classList.remove("show");
+            overlay.setAttribute("aria-hidden", "true");
+        }
+
+        function ensureSetup() {
+            // first-time user: no petType saved
+            if (!state.profile.petType) {
+                openSetup(true);
+            } else {
+                // Make sure petEmoji matches petType (in case you change PETS later)
+                const p = PETS[state.profile.petType];
+                if (p) state.profile.petEmoji = p.emoji;
+            }
+        }
+
+        function wireSetupUI() {
+            // Pet selection
+            document.querySelectorAll("#petGrid .petChoice").forEach(el => {
+                el.addEventListener("click", () => {
+                    pendingPetType = el.dataset.pet;
+                    document.querySelectorAll("#petGrid .petChoice").forEach(x => {
+                        x.classList.toggle("selected", x.dataset.pet === pendingPetType);
+                    });
+                });
+            });
+
+            // Save
+            $("saveSetupBtn")?.addEventListener("click", () => {
+                const name = $("buddyNameInput").value.trim() || "Sprout";
+                const type = pendingPetType || "cat";
+
+                state.profile.buddyName = name;
+                state.profile.petType = type;
+                state.profile.petEmoji = PETS[type].emoji;
+
+                save();
+                render();
+                closeSetup();
+                showToast(`Buddy set: ${PETS[type].label} ${state.profile.petEmoji}`);
+            });
+
+            // Cancel
+            $("cancelSetupBtn")?.addEventListener("click", () => {
+                // If no pet chosen yet, don’t let them cancel into a broken state
+                if (!state.profile.petType) {
+                    showToast("Pick a buddy to start 🐾");
+                    return;
+                }
+                closeSetup();
+            });
+
+            // Change button
+            $("changePetBtn")?.addEventListener("click", () => openSetup(true));
+        }
+        function walkBuddyEmoji() {
+            // Use evolved emoji if you have getPetEmoji; otherwise fallback to saved petEmoji
+            const type = state?.profile?.petType || "cat";
+            const lvl = state?.profile?.level || 1;
+
+            if (typeof getPetEmoji === "function") return getPetEmoji(type, lvl);
+            return state?.profile?.petEmoji || "🐾";
+        }
+
+        // ------------------------------
+        // Take a Walk — tiny runner game
+        // ------------------------------
+        let walk = {
+            running: false,
+            earned: 0,
+            score: 0,
+            raf: null,
+            lastT: 0,
+            speed: 230,        // px/sec
+            gravity: 1400,     // px/sec^2
+            jumpV: 650,        // px/sec
+            groundY: 175,
+            player: { x: 70, y: 175, vy: 0, r: 12, onGround: true },
+            obstacles: [],
+            coins: [],
+            spawnObsIn: 0,
+            spawnCoinIn: 0,
+
+            coyote: 0,
+            jumpBuffer: 0,
+        };
+
+        function openWalk() {
+            const overlay = $("walkOverlay");
+            if (!overlay) return;
+            overlay.classList.add("show");
+            overlay.setAttribute("aria-hidden", "false");
+
+            startWalk();
+        }
+
+        function closeWalk() {
+            const overlay = $("walkOverlay");
+            if (!overlay) return;
+            overlay.classList.remove("show");
+            overlay.setAttribute("aria-hidden", "true");
+
+            // Add earned coins to main app
+            if (walk.earned > 0) {
+                state.profile.coins += walk.earned;
+                save();
+                renderBuddy();
+                showToast(`🪙 +${walk.earned} coins from your walk!`);
+            }
+            stopWalk();
+        }
+
+        function resetWalk() {
+            walk.earned = 0;
+            walk.score = 0;
+            walk.speed = 230;
+            walk.player = { x: 70, y: walk.groundY, vy: 0, r: 14, onGround: true };
+            walk.obstacles = [];
+            walk.coins = [];
+            walk.spawnObsIn = 0.7;
+            walk.spawnCoinIn = 0.9;
+            walk.lastT = performance.now();
+            $("walkEarned").textContent = "0";
+            $("walkScore").textContent = "0";
+        }
+
+        function startWalk() {
+            resetWalk();
+            walk.running = true;
+            walk.raf = requestAnimationFrame(walkLoop);
+        }
+
+        function stopWalk() {
+            walk.running = false;
+            if (walk.raf) cancelAnimationFrame(walk.raf);
+            walk.raf = null;
+        }
+
+        function walkGameOver() {
+            walk.running = false;
+            showToast("Game over — still counts what you earned!");
+        }
+
+        function walkJump() {
+            if (!walk.running) return;
+
+            const p = walk.player;
+
+            // If we can jump right now, do it immediately (snappy)
+            if (p.onGround || walk.coyote > 0) {
+                p.vy = -walk.jumpV;
+                p.onGround = false;
+                walk.coyote = 0;
+                walk.jumpBuffer = 0;
+                return;
+            }
+
+            // Otherwise, buffer the input briefly
+            walk.jumpBuffer = 0.12;
+        }
+
+
+
+
+        function circleHit(ax, ay, ar, bx, by, br) {
+            const dx = ax - bx, dy = ay - by;
+            return (dx * dx + dy * dy) <= (ar + br) * (ar + br);
+        }
+
+        function walkLoop(t) {
+            if (!walk.running) return;
+
+            const cvs = $("walkCanvas");
+            const ctx = cvs.getContext("2d");
+            const dt = Math.min(0.033, (t - walk.lastT) / 1000);
+            walk.jumpBuffer = Math.max(0, walk.jumpBuffer - dt);
+            walk.coyote = Math.max(0, walk.coyote - dt);
+
+            walk.lastT = t;
+
+            // ramp difficulty gently
+            walk.speed += dt * 6;
+
+            // spawn obstacle
+            walk.spawnObsIn -= dt;
+            if (walk.spawnObsIn <= 0) {
+                walk.spawnObsIn = 0.75 + Math.random() * 0.55;
+                walk.obstacles.push({
+                    x: cvs.width + 30,
+                    y: walk.groundY,
+                    w: 18 + Math.random() * 14,
+                    h: 18 + Math.random() * 18,
+                });
+            }
+
+            // spawn coin
+            walk.spawnCoinIn -= dt;
+            if (walk.spawnCoinIn <= 0) {
+                walk.spawnCoinIn = 0.55 + Math.random() * 0.65;
+                walk.coins.push({
+                    x: cvs.width + 30,
+                    y: 110 + Math.random() * 55,
+                    r: 10,
+                    taken: false,
+                });
+            }
+
+            // physics
+            const p = walk.player;
+            p.vy += walk.gravity * dt;
+            p.y += p.vy * dt;
+            if (p.y >= walk.groundY) {
+                p.y = walk.groundY;
+                p.vy = 0;
+                p.onGround = true;
+                walk.coyote = 0.10; // 100ms grace window
+            }
+
+            // buffered jump + coyote time
+            if (walk.jumpBuffer > 0 && (p.onGround || walk.coyote > 0)) {
+                p.vy = -walk.jumpV;
+                p.onGround = false;
+                walk.jumpBuffer = 0;
+                walk.coyote = 0;
+            }
+
+            // move obstacles & coins
+            for (const ob of walk.obstacles) ob.x -= walk.speed * dt;
+            for (const c of walk.coins) c.x -= walk.speed * dt;
+
+            // collisions (obstacles)
+            for (const ob of walk.obstacles) {
+                // approximate player as circle, obstacle as circle-ish
+                const cx = ob.x + ob.w / 2;
+                const cy = ob.y - ob.h / 2;
+                const cr = Math.max(ob.w, ob.h) / 2;
+                if (circleHit(p.x, p.y - p.r, p.r, cx, cy, cr * 0.8)) {
+                    walkGameOver();
+                    break;
+                }
+            }
+
+            // collisions (coins)
+            for (const c of walk.coins) {
+                if (c.taken) continue;
+                if (circleHit(p.x, p.y - p.r, p.r, c.x, c.y, c.r)) {
+                    c.taken = true;
+                    walk.earned += 1;
+                    $("walkEarned").textContent = String(walk.earned);
+                }
+            }
+
+            // cleanup
+            walk.obstacles = walk.obstacles.filter(ob => ob.x + ob.w > -20);
+            walk.coins = walk.coins.filter(c => c.x + c.r > -20 && !c.taken);
+
+            // score
+            walk.score += dt * 10;
+            $("walkScore").textContent = String(Math.floor(walk.score));
+
+            // draw
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+            // ground
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = "rgba(255,255,255,.08)";
+            ctx.fillRect(0, walk.groundY + 12, cvs.width, 3);
+
+            // player 
+            const emo = walkBuddyEmoji();
+
+            ctx.save();
+
+            // hard reset any lingering canvas effects
+            ctx.globalAlpha = 1;
+            ctx.filter = "none";
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = "transparent";
+
+            ctx.font = "32px system-ui, Apple Color Emoji, Segoe UI Emoji";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // optional “glow” behind the emoji so it stands out on dark bg
+            ctx.beginPath();
+            ctx.arc(p.x, p.y - p.r, p.r + 10, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255,255,255,.10)";
+            ctx.fill();
+
+            // draw the emoji twice to make it look more vivid
+            ctx.fillText(emo, p.x, p.y - p.r);
+            ctx.fillText(emo, p.x, p.y - p.r);
+
+            ctx.restore();
+
+
+            // Draw emoji centered at the hitbox center
+            ctx.fillText(emo, p.x, p.y - p.r);
+            const acc = state?.profile?.accessory || "";
+            if (acc) {
+                ctx.font = "16px system-ui, Apple Color Emoji, Segoe UI Emoji";
+                ctx.fillText(acc, p.x + 14, p.y - p.r - 14);
+            }
+
+            ctx.restore();
+
+
+            // tiny face dot
+            ctx.beginPath();
+            ctx.arc(p.x + 4, p.y - p.r - 4, 2, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255,255,255,.75)";
+            ctx.fill();
+
+            // obstacles
+            for (const ob of walk.obstacles) {
+                ctx.fillStyle = "rgba(255,122,165,.35)";
+                ctx.fillRect(ob.x, ob.y - ob.h, ob.w, ob.h);
+            }
+
+            // coins
+            for (const c of walk.coins) {
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255,211,122,.55)";
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255,255,255,.55)";
+                ctx.fill();
+            }
+
+            // if game over, overlay text
+            if (!walk.running) {
+                ctx.fillStyle = "rgba(0,0,0,.55)";
+                ctx.fillRect(0, 0, cvs.width, cvs.height);
+                ctx.fillStyle = "rgba(255,255,255,.92)";
+                ctx.font = "700 18px system-ui";
+                ctx.fillText("Game Over", 20, 45);
+                ctx.font = "500 12px system-ui";
+                ctx.fillStyle = "rgba(255,255,255,.72)";
+                ctx.fillText("Press Restart or Done to collect your coins.", 20, 70);
+                return;
+            }
+
+            if (walk.earned > 25) walk.earned += 1;
+
+            walk.raf = requestAnimationFrame(walkLoop);
+        }
+
+        // Hook up UI events (add near your other event listeners)
+        $("walkBtn")?.addEventListener("click", openWalk);
+        $("walkCloseBtn")?.addEventListener("click", closeWalk);
+        $("walkRestartBtn")?.addEventListener("click", () => { startWalk(); });
+
+        // Space to jump
+        window.addEventListener("keydown", (e) => {
+            const overlay = $("walkOverlay");
+            if (!overlay || !overlay.classList.contains("show")) return;
+
+            if (e.code === "Space" || e.key === " ") {
+                e.preventDefault();
+                walkJump();
+            }
+        });
+
+
+        // Tap / click canvas to jump (mobile friendly)
+        $("walkCanvas")?.addEventListener("pointerdown", () => {
+            const overlay = $("walkOverlay");
+            if (overlay && overlay.classList.contains("show")) walkJump();
+        });
+
+
+    </script>
+    <!-- Changelog / Version modal -->
+    <div class="modalOverlay" id="changelogOverlay" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-label="Changelog">
+            <div class="mhd">
+                <h3>What’s New</h3>
+                <p id="changelogSub" style="margin:6px 0 0;color:rgba(255,255,255,.68);font-size:12px;line-height:1.45">
+                </p>
+            </div>
+
+            <div class="mbd" id="changelogBody" style="gap:10px"></div>
+
+            <div class="actions">
+                <button class="btn" id="changelogCloseBtn">Close</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
