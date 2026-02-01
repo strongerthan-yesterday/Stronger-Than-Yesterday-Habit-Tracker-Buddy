@@ -486,8 +486,8 @@
 
         /* Shop */
         .shop {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
         }
 
@@ -610,6 +610,36 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             overflow: hidden;
+        }
+
+        /* Changelog modal — scroll works (flex + min-height fix) */
+        #changelogOverlay.modalOverlay {
+            align-items: flex-start;
+            /* top align so it doesn't "trap" scroll */
+            overflow-y: auto;
+            /* overlay can scroll if needed */
+        }
+
+        #changelogOverlay .modal {
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            margin: 24px auto;
+            /* gives space from top/bottom */
+        }
+
+        #changelogOverlay .mhd,
+        #changelogOverlay .actions {
+            flex: 0 0 auto;
+        }
+
+        #changelogOverlay #changelogBody {
+            flex: 1 1 auto;
+            min-height: 0;
+            /* allows overflow scroll inside flex */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-right: 6px;
         }
 
         .modal .mhd {
@@ -736,6 +766,48 @@
         .fabVersion:active {
             transform: translateY(1px);
         }
+
+        /*Changelog modal: force a scrollable body (override EVERYTHING) */
+        #changelogOverlay.show {
+            display: flex !important;
+        }
+
+        #changelogOverlay .modal {
+            max-height: 85vh !important;
+            height: 85vh !important;
+            /* gives the modal a real height */
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            /* keep the shell clean */
+        }
+
+        /* header stays fixed */
+        #changelogOverlay .mhd {
+            flex: 0 0 auto !important;
+        }
+
+        /* THIS is the scroll container */
+        #changelogOverlay #changelogBody {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            /* CRITICAL: allows flex child to shrink */
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior: contain !important;
+            padding-right: 8px !important;
+            /* so scrollbar doesn't cover text */
+        }
+
+        /* close button stays fixed */
+        #changelogOverlay .actions {
+            flex: 0 0 auto !important;
+        }
+
+        /* make each changelog entry visibly tall and readable */
+        #changelogOverlay #changelogBody .card {
+            overflow: visible !important;
+        }
     </style>
 </head>
 
@@ -834,6 +906,12 @@
                             </div>
                         </div>
                     </div>
+                    <div class="card" style="box-shadow:none;background:var(--card2); margin-top:12px">
+                        <div class="hd">
+                            <h2>Achievements</h2><span class="muted">Milestones & rewards</span>
+                        </div>
+                        <div class="bd" id="achievements"></div>
+                    </div>
                 </div>
             </section>
             <!-- Right: Habits -->
@@ -910,29 +988,66 @@
         const STORAGE_KEY = "habitBuddy_v1";
         const $ = (id) => document.getElementById(id);
 
-        const APP_VERSION = "0.6.0";
+        const APP_VERSION = "0.6.1";
+        const SEEN_VERSION_KEY = "habitBuddy_seenVersion";
+        const WALK_DAILY_LIMIT = 3;
 
         const CHANGELOG = [
             {
-                version: "0.6.0",
+                version: "0.6.1",
+                date: "2026-02-01",
+                bullets: [
+                    "Added Achievements tab to give rewards for milestones/progress.",
+                    "Button interaction bug fixes for Reset & Take a Walk minigame.",
+                    "Scroll bar added to update log for better readability.",
+                    "Fixed equip/unequip accessory bug.",
+                ]
+            },
+            {
+                version: "0.5.0",
                 date: "2026-01-31",
                 bullets: [
-                    "Added Take a Walk mini-game (earn coins).",
+                    "Introduced floating version button with full update history.",
+                    "Accessories are now pet specific and auto unequip when incompatible.",
+                ]
+            },
+            {
+                version: "0.4.0",
+                date: "2026-01-30",
+                bullets: [
+                    "Added Take a Walk minigame with daily usage limit (3 walks per day).",
+                    "Runner character now matches your chosen buddy and evolution stage.",
+                ]
+            },
+
+            {
+                version: "0.3.1",
+                date: "2026-01-29",
+                bullets: [
+                    "Improved jump physics with buffered input and coyote time.",
+                    "Coins earned during walks are added to your main balance.",
+                ]
+            },
+            {
+                version: "0.3.0",
+                date: "2026-01-27",
+                bullets: [
+                    "Added Take a Walk minigame (earn coins).",
                     "Buddy selection screen (cat/dog/hamster/bird).",
                     "Buddy evolves at levels 3 / 7 / 12.",
                 ]
             },
             {
-                version: "0.5.1",
-                date: "2026-01-30",
+                version: "0.2.1",
+                date: "2026-01-26",
                 bullets: [
                     "Improved habit rewards + streak logic.",
                     "UI polish and bug fixes."
                 ]
             },
             {
-                version: "0.5.0",
-                date: "2026-01-28",
+                version: "0.2.0",
+                date: "2026-01-24",
                 bullets: [
                     "Added reward shop with accessories.",
                     "Leveling system with XP.",
@@ -940,8 +1055,8 @@
                 ]
             },
             {
-                version: "0.4.0",
-                date: "2026-01-25",
+                version: "0.1.0",
+                date: "2026-01-23",
                 bullets: [
                     "Initial release: basic habit tracker with coin rewards."
                 ]
@@ -985,6 +1100,49 @@
             // UNIVERSAL accessories (available to all)
             { id: "acc_star", name: "Star Charm", emoji: "⭐️", cost: 40, type: "accessory", value: "⭐️", desc: "sparkly", pets: ["cat", "dog", "hamster", "bird"] },
             { id: "acc_heart", name: "Heart", emoji: "💗", cost: 30, type: "accessory", value: "💗", desc: "support", pets: ["cat", "dog", "hamster", "bird"] },
+
+            // ACHIEVEMENT accessories (locked until earned)
+            { id: "acc_ach_gold_star", name: "Gold Star", emoji: "🌟", cost: 0, type: "accessory", value: "🌟", desc: "earned: 7-day streak", pets: ["cat", "dog", "hamster", "bird"], achievementId: "streak_7" },
+            { id: "acc_ach_sparkle", name: "Sparkle", emoji: "✨", cost: 0, type: "accessory", value: "✨", desc: "earned: 20 walk coins", pets: ["cat", "dog", "hamster", "bird"], achievementId: "walkcoins_20" },
+
+        ];
+
+        const ACHIEVEMENTS = [
+            // Streak achievements
+            {
+                id: "streak_7",
+                title: "1 Week Streak",
+                desc: "Maintain a 7-day streak by completing all habits each day.",
+                type: "streak",
+                target: 7,
+                reward: { kind: "accessory", itemId: "acc_ach_gold_star" }
+            },
+
+            // Take a Walk lifetime coin achievements
+            {
+                id: "walkcoins_5",
+                title: "First Steps",
+                desc: "Collect 5 coins total in Take a Walk.",
+                type: "walkCoinsLifetime",
+                target: 5,
+                reward: { kind: "coins", amount: 10 }
+            },
+            {
+                id: "walkcoins_10",
+                title: "Getting Moving",
+                desc: "Collect 10 coins total in Take a Walk.",
+                type: "walkCoinsLifetime",
+                target: 10,
+                reward: { kind: "coins", amount: 20 }
+            },
+            {
+                id: "walkcoins_20",
+                title: "On a Roll",
+                desc: "Collect 20 coins total in Take a Walk.",
+                type: "walkCoinsLifetime",
+                target: 20,
+                reward: { kind: "accessory", itemId: "acc_ach_sparkle" }
+            }
         ];
 
 
@@ -1045,6 +1203,12 @@
                     coins: 0,
                     streak: 0,
                     lastCompleteDate: null,
+
+                    walkPlaysToday: 0,
+
+                    walkCoinsLifetime: 0,          // total coins ever collected in Take a Walk
+                    achievements: {},              // achievementId -> { unlockedAt, claimed }
+
                 },
 
                 // habits list
@@ -1114,6 +1278,79 @@
             return 40 + (level - 1) * 10;
         }
 
+        function ensureAchievementState() {
+            state.profile.achievements ||= {};
+            state.profile.walkCoinsLifetime ||= 0;
+        }
+
+        function isAchievementUnlocked(id) {
+            return !!state.profile.achievements?.[id]?.unlockedAt;
+        }
+
+        function isAchievementClaimed(id) {
+            return !!state.profile.achievements?.[id]?.claimed;
+        }
+
+        function unlockAchievement(id) {
+            if (isAchievementUnlocked(id)) return;
+
+            state.profile.achievements[id] = {
+                unlockedAt: Date.now(),
+                claimed: false,
+            };
+
+            showToast("🏁 Achievement unlocked!");
+        }
+
+        function claimAchievement(id) {
+            const a = ACHIEVEMENTS.find(x => x.id === id);
+            if (!a) return;
+
+            if (!isAchievementUnlocked(id)) return showToast("Not unlocked yet.");
+            if (isAchievementClaimed(id)) return showToast("Already claimed.");
+
+            // Give reward
+            if (a.reward.kind === "coins") {
+                state.profile.coins += a.reward.amount;
+                showToast(`🪙 +${a.reward.amount} coins!`);
+            }
+
+            if (a.reward.kind === "accessory") {
+                // Unlock special item in shop inventory
+                state.inventory.unlocked[a.reward.itemId] = true;
+                showToast("🎁 Special accessory unlocked!");
+            }
+
+            state.profile.achievements[id].claimed = true;
+
+            save();
+            render();
+        }
+
+        function getAchievementProgress(a) {
+            if (a.type === "streak") return state.profile.streak || 0;
+            if (a.type === "walkCoinsLifetime") return state.profile.walkCoinsLifetime || 0;
+            return 0;
+        }
+
+        function checkAchievements() {
+            ensureAchievementState();
+
+            for (const a of ACHIEVEMENTS) {
+                const progress = getAchievementProgress(a);
+                if (progress >= a.target) {
+                    unlockAchievement(a.id);
+
+                    // If reward is an accessory, unlocking the achievement should unlock the item automatically
+                    if (a.reward.kind === "accessory") {
+                        state.inventory.unlocked[a.reward.itemId] = true;
+                    }
+                }
+            }
+
+            save();
+        }
+
         function maybeDailyReset() {
             const tk = todayKey();
             if (state.meta.lastDate === tk) return;
@@ -1126,6 +1363,9 @@
 
             state.meta.lastDate = tk;
             save();
+
+            state.profile.walkPlaysToday = 0;
+
         }
 
         function countDone() {
@@ -1176,6 +1416,7 @@
 
             !`);
             }
+            checkAchievements();
         }
 
         function dayDiff(isoA, isoB) {
@@ -1212,7 +1453,7 @@
             coins, +${r.xp
                     }
 
-            XP ✨`);
+            XP`);
             }
         }
 
@@ -1284,52 +1525,46 @@
             showToast(`Purchased: ${item.name
                 }
 
-        ✨`);
+        `);
             save();
             render();
         }
 
         function equipItem(item) {
-
             const petType = state.profile.petType || "cat";
-            // If current accessory doesn't belong to this pet, unequip it
-            if (state.profile.accessory) {
-                const accItem = SHOP_ITEMS.find(x => x.type === "accessory" && x.value === state.profile.accessory);
-                if (accItem && accItem.pets && !accItem.pets.includes(state.profile.petType)) {
-                    state.profile.accessory = "";
-                }
-            }
 
-            // Update evolved emoji immediately
-            state.profile.petEmoji = getPetEmoji(state.profile.petType, state.profile.level);
-
-            // If item is pet-restricted and doesn't match, block equip
+            // Block equip if pet-restricted and doesn't match
             if (item.pets && !item.pets.includes(petType)) {
                 showToast("That accessory doesn’t fit your buddy 🐾");
                 return;
             }
 
             if (item.type === "accessory") {
-                state.profile.accessory = item.value;
-            } else if (item.type === "petEmoji") {
-                state.profile.petEmoji = item.value;
+                // Toggle behavior: if already equipped, UNEQUIP
+                if (state.profile.accessory === item.value) {
+                    state.profile.accessory = "";
+                    showToast("Unequipped.");
+                } else {
+                    // Only one accessory at a time
+                    state.profile.accessory = item.value;
+                    showToast(`Equipped: ${item.name} ✨`);
+                }
             }
 
-
-            if (item.type === "accessory") {
-                state.profile.accessory = item.value;
+            if (item.type === "petEmoji") {
+                // Toggle behavior: if already equipped, revert to evolved default emoji
+                if (state.profile.petEmoji === item.value) {
+                    state.profile.petEmoji = getPetEmoji(petType, state.profile.level);
+                    showToast("Unequipped.");
+                } else {
+                    state.profile.petEmoji = item.value;
+                    showToast(`Equipped: ${item.name} ✨`);
+                }
             }
 
-            else if (item.type === "petEmoji") {
-                state.profile.petEmoji = item.value;
-            }
+            save();
+            render();
         }
-
-        window.addEventListener("DOMContentLoaded", () => {
-            $("versionLabel") && ($("versionLabel").textContent = `v${APP_VERSION}`);
-            $("versionBtn")?.addEventListener("click", openChangelog);
-            $("changelogCloseBtn")?.addEventListener("click", closeChangelog);
-        });
 
 
         function renderHabits() {
@@ -1380,40 +1615,63 @@
             root.innerHTML = "";
             const petType = state.profile.petType || "cat";
 
-
             SHOP_ITEMS
                 .filter(item => !item.pets || item.pets.includes(petType))
                 .forEach(item => {
 
-                    const owned = ! !state.inventory.unlocked[item.id];
-                    const equipped = (item.type === "accessory" && state.profile.accessory === item.value) || (item.type === "petEmoji" && state.profile.petEmoji === item.value);
+                    const isAchievementItem = !!item.achievementId;
+                    const unlockedByAchievement =
+                        isAchievementItem && isAchievementUnlocked(item.achievementId);
+
+                    const owned =
+                        !!state.inventory.unlocked[item.id] || unlockedByAchievement;
+
+                    const locked =
+                        isAchievementItem && !owned;
+
+                    const equipped =
+                        (item.type === "accessory" && state.profile.accessory === item.value) ||
+                        (item.type === "petEmoji" && state.profile.petEmoji === item.value);
+
+                    const badgeText = locked
+                        ? "locked"
+                        : (owned ? (equipped ? "equipped" : "owned") : (item.cost + " 🪙"));
+
+                    const buttonText = locked
+                        ? "Locked"
+                        : (owned ? (equipped ? "Unequip" : "Equip") : "Buy");
+
+                    const disabledAttr = locked
+                        ? "disabled"
+                        : ((!owned && !canAfford(item.cost)) ? "disabled" : "");
 
                     const el = document.createElement("div");
                     el.className = "item";
 
-                    el.innerHTML = ` <div class="l" > <div class="emoji" >${item.emoji
-                        }
+                    el.innerHTML = `
+        <div class="l">
+          <div class="emoji">${item.emoji}</div>
+          <div style="min-width:0">
+            <b>${item.name}</b>
+            <small>${item.desc}</small>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <span class="badge">${badgeText}</span>
+          <button ${disabledAttr}>${buttonText}</button>
+        </div>
+      `;
 
-            </div> <div style="min-width:0" > <b>${item.name
-                        }
+                    el.querySelector("button").addEventListener("click", () => {
+                        if (locked) return;
+                        if (owned) return equipItem(item);
+                        buyItem(item.id);
+                    });
 
-            </b> <small>${item.desc
-                        }
-
-            </small> </div> </div> <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end" > <span class="badge" >${owned ? (equipped ? "equipped" : "owned") : (item.cost + " 🪙")
-                        }
-
-            </span> <button ${(!owned && !canAfford(item.cost)) ? "disabled" : ""
-                        }
-
-            > ${owned ? (equipped ? "Equipped" : "Equip") : "Buy"
-                        }
-
-            </button> </div> `;
-                    el.querySelector("button").addEventListener("click", () => buyItem(item.id));
                     root.appendChild(el);
                 });
         }
+
 
         function renderBuddy() {
             $("coins").textContent = state.profile.coins;
@@ -1422,6 +1680,10 @@
             $("xpNeed").textContent = xpNeeded(state.profile.level);
             $("streak").textContent = state.profile.streak;
             $("buddyName").textContent = state.profile.buddyName;
+
+            const plays = state.profile.walkPlaysToday || 0;
+            $("walkBtn").textContent = `🚶 Take a Walk (${plays}/${WALK_DAILY_LIMIT})`;
+
 
             // Auto-evolve pet appearance based on level
             const type = state.profile.petType || "cat";
@@ -1472,11 +1734,59 @@
     done`;
         }
 
+        function renderAchievements() {
+            const root = $("achievements");
+            if (!root) return;
+
+            root.innerHTML = "";
+
+            ACHIEVEMENTS.forEach(a => {
+                const progress = Math.min(getAchievementProgress(a), a.target);
+                const pct = Math.floor((progress / a.target) * 100);
+
+                const unlocked = isAchievementUnlocked(a.id);
+                const claimed = isAchievementClaimed(a.id);
+
+                const rewardText =
+                    a.reward.kind === "coins"
+                        ? `🪙 ${a.reward.amount} coins`
+                        : `🎁 ${SHOP_ITEMS.find(x => x.id === a.reward.itemId)?.name || "Special item"}`;
+
+                const el = document.createElement("div");
+                el.className = "habit"; // re-use your nice card styling
+
+                el.innerHTML = `
+                <div class="left" style="flex:1">
+                    <div class="txt">
+                    <b>${escapeHtml(a.title)} ${unlocked ? "✅" : ""}</b>
+                    <small class="muted">${escapeHtml(a.desc)} • Reward: ${escapeHtml(rewardText)}</small>
+
+                    <div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div>
+                    <div class="barLabel"><span>${progress}/${a.target}</span><span>${pct}%</span></div>
+                    </div>
+                </div>
+
+                <div class="right">
+                    <button class="iconBtn ${unlocked && !claimed ? "" : "danger"}" ${unlocked && !claimed ? "" : "disabled"}>
+                    ${claimed ? "Claimed" : (unlocked ? "Claim" : "Locked")}
+                    </button>
+                </div>
+                `;
+
+                el.querySelector("button").addEventListener("click", () => {
+                    if (unlocked && !claimed) claimAchievement(a.id);
+                });
+
+                root.appendChild(el);
+            });
+        }
+
         function render() {
             renderHeaderDate();
             renderBuddy();
             renderHabits();
             renderShop();
+            renderAchievements();
             renderDoneSummary();
         }
 
@@ -1498,6 +1808,8 @@
             if (!overlay) return;
 
             $("versionLabel").textContent = `v${APP_VERSION}`;
+            $("changelogSub").textContent =
+                `Stronger Than Yesterday — v${APP_VERSION} • Built around sustainable habits and positive mental health`;
 
             const latest = CHANGELOG[0];
             $("changelogSub").textContent = latest
@@ -1542,18 +1854,27 @@
             overlay.setAttribute("aria-hidden", "true");
         }
 
+        document.addEventListener("DOMContentLoaded", () => {
+            $("versionLabel").textContent = `v${APP_VERSION}`;
+            $("versionBtn")?.addEventListener("click", openChangelog);
+            $("changelogCloseBtn")?.addEventListener("click", closeChangelog);
+
+            const seen = localStorage.getItem(SEEN_VERSION_KEY);
+            if (seen !== APP_VERSION && $("versionBtn")) {
+                $("versionBtn").innerHTML =
+                    `🧩 <span id="versionLabel">v${APP_VERSION}</span> <span class="badge" style="margin-left:6px">NEW</span>`;
+            }
+        });
+
         /* Init */
         let state = load();
+        ensureAchievementState();
+        checkAchievements();
         maybeDailyReset();
         wireSetupUI();
         ensureSetup();
         save();
         render();
-        const seen = localStorage.getItem(SEEN_VERSION_KEY);
-        if (seen !== APP_VERSION && $("versionBtn")) {
-            $("versionBtn").innerHTML = `🧩 <span id="versionLabel">v${APP_VERSION}</span> <span class="badge" style="margin-left:6px">NEW</span>`;
-        }
-
 
         /* Events */
         $("addHabit").addEventListener("click", addHabitFromUI);
@@ -1693,6 +2014,19 @@
         };
 
         function openWalk() {
+            // Make sure day reset happened (in case tab stayed open)
+            maybeDailyReset();
+
+            const plays = state.profile.walkPlaysToday || 0;
+            if (plays >= WALK_DAILY_LIMIT) {
+                showToast("🚶 You’ve used Take a Walk 3× today. Come back tomorrow!");
+                return;
+            }
+
+            state.profile.walkPlaysToday = plays + 1;
+            save();
+            render(); // updates UI if you decide to display plays later
+
             const overlay = $("walkOverlay");
             if (!overlay) return;
             overlay.classList.add("show");
@@ -1700,6 +2034,7 @@
 
             startWalk();
         }
+
 
         function closeWalk() {
             const overlay = $("walkOverlay");
@@ -1709,10 +2044,11 @@
 
             // Add earned coins to main app
             if (walk.earned > 0) {
-                state.profile.coins += walk.earned;
+                state.profile.walkCoinsLifetime = (state.profile.walkCoinsLifetime || 0) + walk.earned;
                 save();
                 renderBuddy();
                 showToast(`🪙 +${walk.earned} coins from your walk!`);
+                checkAchievements();
             }
             stopWalk();
         }
